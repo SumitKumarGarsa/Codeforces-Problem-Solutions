@@ -1,40 +1,77 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+const double PI = acos(-1.0);
 
-    double x1, y1, r1;
-    double x2, y2, r2;
-    double x3, y3, r3;
+struct Stadium {
+    double x, y, r;
+};
 
-    cin >> x1 >> y1 >> r1;
-    cin >> x2 >> y2 >> r2;
-    cin >> x3 >> y3 >> r3;
+Stadium s[3];
 
-    // From:
-    // r1^2 * ((x-x2)^2 + (y-y2)^2) = r2^2 * ((x-x1)^2 + (y-y1)^2)
-    // r1^2 * ((x-x3)^2 + (y-y3)^2) = r3^2 * ((x-x1)^2 + (y-y1)^2)
-
-    double A1 = 2*(r2*r2*x1 - r1*r1*x2);
-    double B1 = 2*(r2*r2*y1 - r1*r1*y2);
-    double C1 = r1*r1*(x2*x2 + y2*y2) - r2*r2*(x1*x1 + y1*y1);
-
-    double A2 = 2*(r3*r3*x1 - r1*r1*x3);
-    double B2 = 2*(r3*r3*y1 - r1*r1*y3);
-    double C2 = r1*r1*(x3*x3 + y3*y3) - r3*r3*(x1*x1 + y1*y1);
-
-    double det = A1*B2 - A2*B1;
-
-    if (fabs(det) < 1e-12) {
-        // No solution
-        return 0;
+double get_error(double x, double y) {
+    double d[3];
+    for (int i = 0; i < 3; i++) {
+        d[i] = hypot(x - s[i].x, y - s[i].y) / s[i].r;
     }
 
-    double x = (C1*B2 - C2*B1) / det;
-    double y = (A1*C2 - A2*C1) / det;
+    double e = 0;
+    for (int i = 0; i < 3; i++) {
+        double diff = d[i] - d[(i + 1) % 3];
+        e += diff * diff;
+    }
 
-    cout << fixed << setprecision(5) << x << " " << y;
+    return e;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+
+    double x = 0, y = 0;
+
+    for (int i = 0; i < 3; i++) {
+        cin >> s[i].x >> s[i].y >> s[i].r;
+        x += s[i].x;
+        y += s[i].y;
+    }
+
+    x /= 3.0;
+    y /= 3.0;
+
+    double step = 1.0;
+
+    while (step > 1e-6) {
+        double best = get_error(x, y);
+        double nx = x, ny = y;
+        bool moved = false;
+
+        for (int i = 0; i < 8; i++) {
+            double ang = i * PI / 4.0;
+            double tx = x + cos(ang) * step;
+            double ty = y + sin(ang) * step;
+
+            double cur = get_error(tx, ty);
+
+            if (cur < best) {
+                best = cur;
+                nx = tx;
+                ny = ty;
+                moved = true;
+            }
+        }
+
+        if (moved) {
+            x = nx;
+            y = ny;
+        } else {
+            step *= 0.5;
+        }
+    }
+
+    if (get_error(x, y) < 1e-7) {
+        cout << fixed << setprecision(5) << x << " " << y;
+    }
+
     return 0;
 }
